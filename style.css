@@ -68,10 +68,21 @@ header{z-index:100;overflow:visible}
 #setup{padding-bottom:95px}
 @media(max-width:600px){.menu-toggle{min-width:48px}.start-dock{left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.start-dock button{width:100%;min-height:54px;font-size:14px}#setup{padding-bottom:110px}}
 
-/* Atlas GOTRM — Position du bouton Commencer sur ordinateur */
-
-.start-dock {
-  position: fixed;
-  right: max(18px, calc((100vw - 1380px)/2 + 18px));
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+/* V0.6.3 : CTA centré au-dessus des modes sur bureau ; dock mobile inchangé */
+@media (min-width:601px) {
+  #setup .start-dock {
+    position:relative;
+    inset:auto;
+    z-index:auto;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    margin:28px 0 4px;
+    pointer-events:auto;
+  }
+  #setup .start-dock button {
+    width:auto;
+    min-width:220px;
+  }
 }
