@@ -67,3 +67,19 @@ header{z-index:100;overflow:visible}
 .start-dock[hidden]{display:none!important}
 #setup{padding-bottom:95px}
 @media(max-width:600px){.menu-toggle{min-width:48px}.start-dock{left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.start-dock button{width:100%;min-height:54px;font-size:14px}#setup{padding-bottom:110px}}
+
+/* Atlas GOTRM — Position du bouton Commencer sur ordinateur */
+
+@media (min-width: 769px) {
+  #startFloating,
+  .floating-start {
+    position: sticky;
+    bottom: 20px;
+    left: auto;
+    right: auto;
+    width: fit-content;
+    margin: 20px auto;
+    display: block;
+    z-index: 100;
+  }
+}
