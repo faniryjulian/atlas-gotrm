@@ -70,16 +70,8 @@ header{z-index:100;overflow:visible}
 
 /* Atlas GOTRM — Position du bouton Commencer sur ordinateur */
 
-@media (min-width: 769px) {
-  #startFloating,
-  .floating-start {
-    position: sticky;
-    bottom: 20px;
-    left: auto;
-    right: auto;
-    width: fit-content;
-    margin: 20px auto;
-    display: block;
-    z-index: 100;
-  }
+.start-dock {
+  position: fixed;
+  right: max(18px, calc((100vw - 1380px)/2 + 18px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
