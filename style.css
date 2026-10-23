@@ -92,3 +92,6 @@ header{z-index:100;overflow:visible}
 @media (max-width: 600px) {
   .start-dock { position: fixed; top: auto; }
 }
+
+/* V0.6.5 : interactions tactiles gérées sur le SVG (pincement et déplacement). */
+#map { touch-action: none; }

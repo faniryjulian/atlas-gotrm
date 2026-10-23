@@ -81,7 +81,65 @@ function drawMap(){const g=$('mapLayer');g.innerHTML='';for(const d of departmen
 function applyTransform(){$('mapLayer').setAttribute('transform',`translate(${tx} ${ty}) scale(${scale})`)}
 function zoom(f){scale=Math.max(1,Math.min(9,scale*f));applyTransform()}
 $('zoomIn').onclick=()=>zoom(1.35);$('zoomOut').onclick=()=>zoom(1/1.35);$('resetZoom').onclick=()=>{scale=1;tx=ty=0;applyTransform()};
-const svg=$('map');svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.18:1/1.18)},{passive:false});svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,tx,ty};svg.classList.add('dragging')});svg.addEventListener('pointermove',e=>{if(!drag)return;const rect=svg.getBoundingClientRect();tx=drag.tx+(e.clientX-drag.x)*800/rect.width;ty=drag.ty+(e.clientY-drag.y)*800/rect.height;applyTransform()});svg.addEventListener('pointerup',()=>{drag=null;svg.classList.remove('dragging')});
+// V0.6.5 — déplacement à un doigt et zoom par pincement à deux doigts.
+const svg=$('map');
+const activePointers=new Map();
+let pinch=null;
+const svgPoint=(x,y)=>{
+  const p=svg.createSVGPoint();p.x=x;p.y=y;
+  const matrix=svg.getScreenCTM();
+  if(!matrix)return {x:0,y:0};
+  const result=p.matrixTransform(matrix.inverse());
+  return {x:result.x,y:result.y};
+};
+function pointerPair(){
+  const [a,b]=[...activePointers.values()];
+  return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)};
+}
+function beginPinch(){
+  const pair=pointerPair(),center=svgPoint(pair.x,pair.y);
+  pinch={distance:Math.max(pair.distance,1),scale,worldX:(center.x-tx)/scale,worldY:(center.y-ty)/scale};
+  drag=null;svg.classList.remove('dragging');
+}
+svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.18:1/1.18)},{passive:false});
+svg.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{svg.setPointerCapture(e.pointerId)}catch{}
+  if(activePointers.size===2){beginPinch()}
+  else if(activePointers.size===1){drag={x:e.clientX,y:e.clientY,tx,ty};svg.classList.add('dragging')}
+});
+svg.addEventListener('pointermove',e=>{
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size>=2){
+    if(activePointers.size!==2)return;
+    if(!pinch)beginPinch();
+    const pair=pointerPair(),center=svgPoint(pair.x,pair.y);
+    scale=Math.max(1,Math.min(9,pinch.scale*pair.distance/pinch.distance));
+    tx=center.x-pinch.worldX*scale;
+    ty=center.y-pinch.worldY*scale;
+    applyTransform();
+  }else if(drag){
+    const before=svgPoint(drag.x,drag.y),after=svgPoint(e.clientX,e.clientY);
+    tx=drag.tx+after.x-before.x;
+    ty=drag.ty+after.y-before.y;
+    applyTransform();
+  }
+});
+function endPointer(e){
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.delete(e.pointerId);
+  pinch=null;
+  if(activePointers.size===1){
+    const p=[...activePointers.values()][0];
+    drag={x:p.x,y:p.y,tx,ty};svg.classList.add('dragging');
+  }else{drag=null;svg.classList.remove('dragging')}
+}
+svg.addEventListener('pointerup',endPointer);
+svg.addEventListener('pointercancel',endPointer);
+svg.addEventListener('lostpointercapture',endPointer);
+
 function choose(code){if(activeRegion&&regionByCode[code]!==activeRegion)return;if(locked||freeMode&&freeDone.has(code))return;selected=code;$('selected').textContent='Département sélectionné sur la carte';paint()}
 function paint(){document.querySelectorAll('#map path').forEach(p=>{p.classList.remove('active','correct','incorrect','highlight');if(p.dataset.code===selected)p.classList.add('active');if($('game').hidden)return;if(!freeMode&&variant==='map'&&session[index]?.code===p.dataset.code)p.classList.add('highlight');if(freeMode&&freeDone.has(p.dataset.code))p.classList.add('correct');if(searchCode===p.dataset.code)p.classList.add('highlight');if(filterRegion!=='all'&&regionByCode[p.dataset.code]!==filterRegion)p.classList.add('dimmed');if($('correction').value==='immediate')for(const a of answers){if(a.target.code===p.dataset.code)p.classList.add(a.right?'correct':'incorrect')}})}
 function setVisible(section){for(const id of ['setup','game','results','analytics'])$(id).hidden=id!==section;$('startDock').hidden=section!=='setup';closeSiteMenu()}
