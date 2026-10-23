@@ -68,21 +68,27 @@ header{z-index:100;overflow:visible}
 #setup{padding-bottom:95px}
 @media(max-width:600px){.menu-toggle{min-width:48px}.start-dock{left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.start-dock button{width:100%;min-height:54px;font-size:14px}#setup{padding-bottom:110px}}
 
-/* V0.6.3 : CTA centré au-dessus des modes sur bureau ; dock mobile inchangé */
-@media (min-width:601px) {
-  #setup .start-dock {
-    position:relative;
-    inset:auto;
-    z-index:auto;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    width:100%;
-    margin:28px 0 4px;
-    pointer-events:auto;
+/* V0.6.4 — CTA centre dans une barre fixe sous l'en-tête sur ordinateur */
+@media (min-width: 601px) {
+  header { height: 82px; min-height: 82px; }
+  .start-dock {
+    position: sticky;
+    top: 82px;
+    left: auto; right: auto; bottom: auto;
+    width: 100%;
+    display: flex;
+    align-items: center; justify-content: center;
+    padding: 9px 16px;
+    background: linear-gradient(180deg, #161416f5, #111113f0);
+    border-bottom: 1px solid #654634;
+    box-shadow: 0 8px 22px #0008;
+    z-index: 90;
+    pointer-events: none;
   }
-  #setup .start-dock button {
-    width:auto;
-    min-width:220px;
-  }
+  .start-dock button { min-height: 48px; }
+  #setup { padding-bottom: 28px; }
+}
+/* Sur mobile, la barre d'action garde sa position fixe en bas. */
+@media (max-width: 600px) {
+  .start-dock { position: fixed; top: auto; }
 }
