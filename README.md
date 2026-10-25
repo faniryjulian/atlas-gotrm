@@ -1,1 +1,2 @@
-Atlas GOTRM V0.7.10 : harmonisation des icones des grands titres Accueil, Encyclopedie et Tableau de bord. JavaScript inchange depuis V0.7.9.
+Atlas GOTRM V0.7.12
+Mobile/tablette: la fiche territoriale apparait avant la liste des departements. Desktop inchange. JavaScript identique a V0.7.11.

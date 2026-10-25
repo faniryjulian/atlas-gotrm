@@ -364,3 +364,17 @@ document.querySelector('#encyMap').addEventListener('pointerup', e => {
 encyMapSvg.addEventListener('pointerup',encyEndPointer);
 encyMapSvg.addEventListener('pointercancel',encyEndPointer);
 
+
+// V0.7.11 — bouton flottant de retour en haut. Aucun changement aux cartes et quiz.
+(() => {
+  const button = document.getElementById('backToTop');
+  if (!button) return;
+  const updateVisibility = () => {
+    button.classList.toggle('is-visible', window.scrollY > 360);
+  };
+  window.addEventListener('scroll', updateVisibility, { passive: true });
+  button.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  });
+  updateVisibility();
+})();
