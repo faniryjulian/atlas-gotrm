@@ -73,7 +73,7 @@ let departments=[],session=[],index=0,answers=[],selected=null,locked=false,vari
 const norm=s=>String(s||'').trim().toLocaleLowerCase('fr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’'\s-]+/g,'');
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[b[i],b[k]]=[b[k],b[i]]}return b};
 const geoURL='https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson';
-async function loadMap(){try{const r=await fetch(geoURL);if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();departments=data.features.filter(f=>prefByCode[f.properties.code]).map(f=>({...f,code:f.properties.code,name:f.properties.nom,pref:prefByCode[f.properties.code]}));if(departments.length!==96)throw Error('96 départements attendus, '+departments.length+' reçus');drawMap();populateRegions();renderRpg();renderConquest();$('mapStatus').textContent='Carte chargée : 96 départements.';}catch(e){$('mapStatus').textContent='Carte indisponible : connexion Internet requise pour charger les contours. '+e.message;}}
+async function loadMap(){try{const r=await fetch(geoURL);if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();departments=data.features.filter(f=>prefByCode[f.properties.code]).map(f=>({...f,code:f.properties.code,name:f.properties.nom,pref:prefByCode[f.properties.code]}));if(departments.length!==96)throw Error('96 départements attendus, '+departments.length+' reçus');drawMap();drawEncyclopediaMap();populateRegions();renderRpg();renderConquest();$('mapStatus').textContent='Carte chargée : 96 départements.';}catch(e){$('mapStatus').textContent='Carte indisponible : connexion Internet requise pour charger les contours. '+e.message;}}
 function project(c){return [(c[0]+5.8)/16*800,(51.5-c[1])/11.2*800]}
 function geometryPath(g){const polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;return polys.map(poly=>poly.map(ring=>ring.map((p,i)=>(i?'L':'M')+project(p).map(x=>x.toFixed(2)).join(',')).join(' ')+' Z').join(' ')).join(' ')}
 function populateRegions(){const sel=$('regionFilter');const names=[...new Set(departments.map(d=>regionByCode[d.code]||'').filter(Boolean))].sort();for(const n of names){const o=document.createElement('option');o.value=n;o.textContent=n;sel.append(o)}if(!names.length){sel.hidden=true}}
@@ -142,7 +142,7 @@ svg.addEventListener('lostpointercapture',endPointer);
 
 function choose(code){if(activeRegion&&regionByCode[code]!==activeRegion)return;if(locked||freeMode&&freeDone.has(code))return;selected=code;$('selected').textContent='Département sélectionné sur la carte';paint()}
 function paint(){document.querySelectorAll('#map path').forEach(p=>{p.classList.remove('active','correct','incorrect','highlight');if(p.dataset.code===selected)p.classList.add('active');if($('game').hidden)return;if(!freeMode&&variant==='map'&&session[index]?.code===p.dataset.code)p.classList.add('highlight');if(freeMode&&freeDone.has(p.dataset.code))p.classList.add('correct');if(searchCode===p.dataset.code)p.classList.add('highlight');if(filterRegion!=='all'&&regionByCode[p.dataset.code]!==filterRegion)p.classList.add('dimmed');if($('correction').value==='immediate')for(const a of answers){if(a.target.code===p.dataset.code)p.classList.add(a.right?'correct':'incorrect')}})}
-function setVisible(section){for(const id of ['setup','game','results','analytics'])$(id).hidden=id!==section;$('startDock').hidden=section!=='setup';closeSiteMenu()}
+function setVisible(section){for(const id of ['setup','game','results','analytics','encyclopedia'])$(id).hidden=id!==section;$('startDock').hidden=section!=='setup';closeSiteMenu()}
 function start(){if(!departments.length){$('setupMsg').textContent='Attends le chargement de la carte ou vérifie ta connexion.';return}let pool=departments;activeConquestMode=$('conquestMode').value;activeRegion=activeConquestMode==='all'?null:$('regionChoice').value;if(activeRegion)pool=pool.filter(d=>regionByCode[d.code]===activeRegion);if($('revision').checked){const codes=JSON.parse(localStorage.getItem('dm_errors')||'[]');pool=pool.filter(d=>codes.includes(d.code));if(!pool.length){$('setupMsg').textContent='Aucune erreur enregistrée pour ce territoire.';return}}freeMode=$('mode').value==='free';session=freeMode?pool:shuffle(pool).slice(0,Number($('count').value));sessionLimit=Math.min(Number($('count').value),session.length);answers=[];index=0;selected=null;locked=false;sessionSaved=false;freeDone=new Set();searchCode=null;$('mapSearch').value='';$('mapTools').hidden=!freeMode;$('freeProgress').hidden=!freeMode;setVisible('game');filterRegion=activeRegion||'all';$('regionFilter').value=activeRegion||'all';$('workspace').classList.toggle('immersive',$('layout').value==='immersive');if(freeMode)renderFree();else renderQuestion()}
 function renderFree(){locked=false;variant='free';$('counter').textContent=`Carte libre · ${freeDone.size} / ${sessionLimit}`;$('prompt').textContent=(activeRegion?'Conquête de '+activeRegion+' · ':'')+'Choisis librement les départements à évaluer, puis complète les trois informations.';$('clue').textContent='Sélectionne un département sur la carte.';for(const id of ['code','name','pref']){$(id).value='';$(id).disabled=false}$('selected').textContent='Aucun département sélectionné';$('freeProgress').textContent=`${sessionLimit-freeDone.size} réponses restantes`;$('feedback').textContent='';$('feedback').className='';$('submit').hidden=false;$('next').hidden=true;paint()}
 function renderQuestion(){if(index>=session.length)return finish();locked=false;selected=null;for(const id of ['code','name','pref']){$(id).value='';$(id).disabled=false}const ex=$('exercise').value;variant=ex==='identify'?'map':ex==='locate'?shuffle(['code','name','pref'])[0]:shuffle(['map','code','name','pref'])[0];const d=session[index];$('counter').textContent=`Question ${index+1} / ${session.length}`;$('prompt').textContent=(activeRegion?'Conquête de '+activeRegion+' · ':'')+'Complète les informations non fournies et localise le département si nécessaire.';$('clue').textContent=variant==='map'?'Indice : département surligné sur la carte':`Indice : ${variant==='code'?'numéro '+d.code:variant==='name'?'département '+d.name:'préfecture '+d.pref}`;if(variant!=='map'){const id={code:'code',name:'name',pref:'pref'}[variant];$(id).value=d[variant];$(id).disabled=true}else selected=null;$('selected').textContent=variant==='map'?'Localisation déjà fournie':'Clique sur le département correspondant';$('feedback').textContent='';$('feedback').className='';$('submit').hidden=false;$('next').hidden=true;paint()}
@@ -230,7 +230,137 @@ menuToggle.addEventListener('click',event=>{event.stopPropagation();const openin
 siteMenu.addEventListener('click',event=>event.stopPropagation());
 document.addEventListener('click',event=>{if(!event.target.closest('.nav-wrap'))closeSiteMenu()});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!siteMenu.hidden){closeSiteMenu();menuToggle.focus()}});
+$('openEncyclopedia').addEventListener('click',()=>{renderEncyclopedia();setVisible('encyclopedia');window.scrollTo(0,0)});
+$('backEncyclopedia').addEventListener('click',()=>{setVisible('setup');renderDashboard();window.scrollTo(0,0)});
 $('openAnalytics').addEventListener('click',()=>{renderAnalytics();setVisible('analytics');window.scrollTo(0,0)});
 $('backAnalytics').addEventListener('click',()=>{setVisible('setup');renderDashboard();window.scrollTo(0,0)});
 
 $('start').onclick=start;$('next').onclick=()=>{if(freeMode){if(freeDone.size>=sessionLimit)finish();else{selected=null;renderFree()}}else{index++;renderQuestion()}};$('finish').onclick=finish;$('home').onclick=()=>{setVisible('setup');renderDashboard()};$('again').onclick=()=>{setVisible('setup');renderDashboard()};$('switchLayout').onclick=()=>$('workspace').classList.toggle('immersive');$('resetMap').onclick=()=>{scale=1;tx=ty=0;applyTransform()};$('mapSearch').addEventListener('input',e=>{if(!freeMode)return;const q=norm(e.target.value);searchCode=q?departments.find(d=>norm(d.name).includes(q)||norm(d.code)===q)?.code:null;paint()});$('regionFilter').addEventListener('change',e=>{filterRegion=e.target.value;paint()});$('mode').addEventListener('change',e=>{$('exercise').disabled=e.target.value==='free'});function renderDashboard(){const history=JSON.parse(localStorage.getItem('dm_history')||'[]');const errors=JSON.parse(localStorage.getItem('dm_errors')||'[]');const total=history.reduce((a,s)=>a+s.points,0),max=history.reduce((a,s)=>a+s.max,0);$('dashboard').textContent=`⚔ ${history.length} session(s) · ${max?Math.round(100*total/max):0}% de réussite cumulée · ${errors.length} département(s) à réviser`;renderRpg();renderConquest();}renderDashboard();loadMap();
+
+// V0.7.0 — Encyclopédie : indépendante des quiz, XP et historiques.
+const ENCY_FAV_KEY='atlas_gotrm_ency_favorites_v1';
+let encySelected=null;
+function encyFavorites(){try{const v=JSON.parse(localStorage.getItem(ENCY_FAV_KEY)||'[]');return new Set(Array.isArray(v)?v:[])}catch{return new Set()}}
+function encySaveFavorites(favs){try{localStorage.setItem(ENCY_FAV_KEY,JSON.stringify([...favs]))}catch{}}
+function encyEntries(){return PREF.map(([code,pref])=>({code,pref,name:departments.find(d=>d.code===code)?.name||'',region:regionByCode[code],history:HISTOIRE_DEPARTEMENTS[code]||''})).filter(d=>d.name)}
+function renderEncyclopedia(){
+ const select=$('encyRegion');if(select.options.length===1){for(const r of REGIONS){const o=document.createElement('option');o.value=r.name;o.textContent=r.name;select.append(o)}}
+ if(!encySelected)encySelected='33';renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap();
+}
+function renderEncyclopediaList(){
+ const q=norm($('encySearch').value.trim()),region=$('encyRegion').value,favs=encyFavorites();
+ const items=encyEntries().filter(d=>(region==='all'||d.region===region)&&(!$('encyFavoritesOnly').checked||favs.has(d.code))&&(!q||[d.code,d.name,d.pref,d.region].some(s=>norm(s).includes(q))));
+ $('encyCount').textContent=items.length+' département(s) affiché(s) sur 96';const grid=$('encyGrid');grid.replaceChildren();
+ if(!items.length){const empty=document.createElement('p');empty.textContent='Aucun département ne correspond à ces filtres.';grid.append(empty);return}
+ for(const d of items){const b=document.createElement('button');b.type='button';b.className='ency-card'+(encySelected===d.code?' selected':'');b.setAttribute('aria-pressed',String(encySelected===d.code));
+ const code=document.createElement('strong');code.className='ency-code';code.textContent=d.code;
+ const info=document.createElement('span');const name=document.createElement('strong');name.textContent=d.name;const pref=document.createElement('small');pref.textContent='Préfecture : '+d.pref;info.append(name,pref);b.append(code,info);
+ if(favs.has(d.code)){const star=document.createElement('span');star.textContent='★';star.setAttribute('aria-label','Favori');b.append(star)}
+ b.addEventListener('click',()=>{encySelected=d.code;renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap();if(window.matchMedia('(max-width: 850px)').matches)$('encyDetail').scrollIntoView({behavior:'smooth',block:'start'})});grid.append(b)}
+}
+function renderEncyclopediaDetail(){const root=$('encyDetail'),entries=encyEntries(),d=entries.find(x=>x.code===encySelected);root.replaceChildren();if(!d){root.textContent='Sélectionne un département.';return}
+ const eyebrow=document.createElement('div');eyebrow.className='eyebrow';eyebrow.textContent='✦ Fiche territoriale ✦';
+ const heading=document.createElement('div');heading.className='ency-detail-title';const num=document.createElement('span');num.className='ency-number';num.textContent=d.code;const title=document.createElement('div');const h=document.createElement('h2');h.textContent=d.name;const region=document.createElement('p');region.textContent=d.region;title.append(h,region);heading.append(num,title);
+ const pref=document.createElement('p');pref.className='ency-pref';pref.textContent='⌖ Préfecture : '+d.pref;
+ const h3=document.createElement('h3');h3.textContent='📜 Repère historique';const history=document.createElement('p');history.className='ency-history';history.textContent=d.history;
+ const note=document.createElement('p');note.className='ency-note';note.textContent='Fiche d’introduction : les repères historiques sont volontairement succincts.';
+ const actions=document.createElement('div');actions.className='ency-actions';const fav=document.createElement('button');fav.type='button';const favorites=encyFavorites();fav.textContent=favorites.has(d.code)?'★ Retirer des favoris':'☆ Ajouter aux favoris';fav.setAttribute('aria-pressed',String(favorites.has(d.code)));fav.addEventListener('click',()=>{const f=encyFavorites();f.has(d.code)?f.delete(d.code):f.add(d.code);encySaveFavorites(f);renderEncyclopediaList();renderEncyclopediaDetail()});
+ const previous=document.createElement('button');previous.type='button';previous.textContent='← Précédent';const next=document.createElement('button');next.type='button';next.textContent='Suivant →';const index=entries.findIndex(x=>x.code===d.code);previous.disabled=index===0;next.disabled=index===entries.length-1;previous.addEventListener('click',()=>encyGo(entries[index-1].code));next.addEventListener('click',()=>encyGo(entries[index+1].code));actions.append(fav,previous,next);
+ root.append(eyebrow,heading,pref,h3,history,note,actions);updateEncyclopediaMap();
+}
+function encyGo(code){encySelected=code;$('encySearch').value='';$('encyRegion').value='all';$('encyFavoritesOnly').checked=false;renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap()}
+$('encySearch').addEventListener('input',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
+$('encyRegion').addEventListener('change',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
+$('encyFavoritesOnly').addEventListener('change',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
+
+// V0.7.1 — Carte encyclopédique indépendante de la carte des quiz.
+let encyMapScale=1,encyMapX=0,encyMapY=0;
+const encyMapSvg=$('encyMap'),encyMapLayer=$('encyMapLayer');
+function encyMapTransform(){encyMapLayer.setAttribute('transform',`translate(${encyMapX} ${encyMapY}) scale(${encyMapScale})`)}
+function encyMapZoom(factor,px=400,py=400){const s=Math.max(1,Math.min(9,encyMapScale*factor));const ratio=s/encyMapScale;encyMapX=px-(px-encyMapX)*ratio;encyMapY=py-(py-encyMapY)*ratio;encyMapScale=s;encyMapTransform()}
+function encyMapPoint(e){const p=encyMapSvg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const matrix=encyMapSvg.getScreenCTM();return matrix?p.matrixTransform(matrix.inverse()):{x:400,y:400}}
+function drawEncyclopediaMap(){encyMapLayer.replaceChildren();for(const d of departments){const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',geometryPath(d.geometry));path.dataset.code=d.code;path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',`${d.name}, département ${d.code}, préfecture ${d.pref}`);path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();encySelectFromMap(d.code)}});path.addEventListener('pointerenter',()=>{$('encyMapTip').textContent=`${d.code} · ${d.name} — ${d.pref}`});path.addEventListener('pointerleave',()=>{$('encyMapTip').textContent='Clique sur un département pour ouvrir sa fiche.'});encyMapLayer.append(path)}updateEncyclopediaMap()}
+function encySelectFromMap(code){
+ // La sélection sur la carte doit aussi rendre la fiche immédiatement visible.
+ encySelected=code;
+ renderEncyclopediaList();
+ renderEncyclopediaDetail();
+ updateEncyclopediaMap();
+ const target=$('encyDetail');
+ if(!target)return;
+ requestAnimationFrame(()=>{
+   // Le panneau est sticky sur ordinateur : viser le début de sa section.
+   const isWide=window.matchMedia('(min-width: 1051px)').matches;
+   const element=isWide?document.querySelector('.ency-layout'):target;
+   const y=element.getBoundingClientRect().top+window.scrollY-90;
+   window.scrollTo({top:Math.max(0,y),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+   target.setAttribute('tabindex','-1');
+   try{target.focus({preventScroll:true})}catch(_){}
+ });
+}
+function updateEncyclopediaMap(){if(!encyMapLayer)return;const q=norm($('encySearch').value),region=$('encyRegion').value,favs=encyFavorites(),onlyFav=$('encyFavoritesOnly').checked;for(const path of encyMapLayer.querySelectorAll('path')){const d=departments.find(x=>x.code===path.dataset.code);if(!d)continue;const matched=(region==='all'||regionByCode[d.code]===region)&&(!onlyFav||favs.has(d.code))&&(!q||[d.code,d.name,d.pref,regionByCode[d.code]].some(v=>norm(v).includes(q)));path.classList.toggle('ency-map-muted',!matched);path.classList.toggle('ency-map-selected',d.code===encySelected);path.setAttribute('aria-pressed',String(d.code===encySelected))}}
+$('encyZoomIn').addEventListener('click',()=>encyMapZoom(1.4));$('encyZoomOut').addEventListener('click',()=>encyMapZoom(1/1.4));$('encyZoomReset').addEventListener('click',()=>{encyMapScale=1;encyMapX=encyMapY=0;encyMapTransform()});
+encyMapSvg.addEventListener('wheel',e=>{e.preventDefault();const p=encyMapPoint(e);encyMapZoom(e.deltaY<0?1.2:1/1.2,p.x,p.y)},{passive:false});
+const encyPointers=new Map();let encyGesture=null,encyDragged=false,encyDownScreen=null,encyGestureHadMultiTouch=false;
+function encyDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function encyStartGesture(){const pts=[...encyPointers.values()];encyGesture={points:pts,scale:encyMapScale,x:encyMapX,y:encyMapY,center:pts.length>1?{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2}:pts[0],distance:pts.length>1?encyDistance(pts[0],pts[1]):0};}
+encyMapSvg.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ if(!encyPointers.size){
+   encyDragged=false;
+   encyGestureHadMultiTouch=false;
+   encyDownScreen={x:e.clientX,y:e.clientY};
+ }else{encyDragged=true;encyGestureHadMultiTouch=true;}
+ encyPointers.set(e.pointerId,encyMapPoint(e));
+ // Pas de capture de pointeur : elle pouvait empêcher le clic natif sur les tracés SVG.
+ if(e.pointerType!=='mouse' && e.pointerType!=='touch')encyMapSvg.setPointerCapture(e.pointerId);
+ encyStartGesture();
+});
+encyMapSvg.addEventListener('pointermove',e=>{
+ if(!encyPointers.has(e.pointerId))return;
+ const p=encyMapPoint(e);encyPointers.set(e.pointerId,p);
+ if(!encyGesture)return;
+ if(encyDownScreen&&Math.hypot(e.clientX-encyDownScreen.x,e.clientY-encyDownScreen.y)>9)encyDragged=true;
+ const pts=[...encyPointers.values()];
+ const c=pts.length>1?{x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2}:pts[0];
+ if(pts.length>1)encyDragged=true;
+ if(!encyDragged&&pts.length===1)return; // évite un déplacement parasite lors d'un clic
+ if(pts.length>1&&encyGesture.distance){
+   encyMapScale=Math.max(1,Math.min(9,encyGesture.scale*encyDistance(pts[0],pts[1])/encyGesture.distance));
+   const ratio=encyMapScale/encyGesture.scale;
+   encyMapX=c.x-(encyGesture.center.x-encyGesture.x)*ratio;
+   encyMapY=c.y-(encyGesture.center.y-encyGesture.y)*ratio;
+ }else{
+   encyMapX=encyGesture.x+c.x-encyGesture.center.x;
+   encyMapY=encyGesture.y+c.y-encyGesture.center.y;
+ }
+ encyMapTransform();
+});
+function encyEndPointer(e){
+ const tracked=encyPointers.has(e.pointerId);
+ const moved=encyDownScreen&&Math.hypot(e.clientX-encyDownScreen.x,e.clientY-encyDownScreen.y)>9;
+ if(moved)encyDragged=true;
+ // Correctif validé dans Brave : interroger le véritable élément sous le pointeur
+ // lors du relâchement, plutôt que e.target (souvent le SVG parent).
+ const isTap=tracked&&e.type==='pointerup'&&encyPointers.size===1&&!encyDragged&&!encyGestureHadMultiTouch;
+ const hit=isTap?document.elementFromPoint(e.clientX,e.clientY):null;
+ const path=hit?.closest?.('#encyMap path[data-code]');
+ const code=path?.dataset.code;
+ encyPointers.delete(e.pointerId);
+ if(encyPointers.size)encyStartGesture();else{
+   encyGesture=null;encyDownScreen=null;encyDragged=false;encyGestureHadMultiTouch=false;
+ }
+ // La sélection est gérée séparément par le listener pointerup en capture.
+}
+// V0.7.8 : code identique au test réussi dans la console Brave.
+document.querySelector('#encyMap').addEventListener('pointerup', e => {
+  const element = document.elementFromPoint(e.clientX, e.clientY);
+  const departement = element?.closest('path[data-code]');
+  if (departement) {
+    console.log('Sélection :', departement.dataset.code);
+    encySelectFromMap(departement.dataset.code);
+  }
+}, true);
+encyMapSvg.addEventListener('pointerup',encyEndPointer);
+encyMapSvg.addEventListener('pointercancel',encyEndPointer);
+

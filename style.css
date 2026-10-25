@@ -95,3 +95,32 @@ header{z-index:100;overflow:visible}
 
 /* V0.6.5 : interactions tactiles gérées sur le SVG (pincement et déplacement). */
 #map { touch-action: none; }
+
+/* V0.7.0 — Encyclopédie */
+.encyclopedia-page{min-height:65vh}.ency-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}.ency-head h1{margin-bottom:8px}.ency-controls{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:22px 0 12px}.ency-controls>label{flex:1 1 210px;display:flex;flex-direction:column;gap:7px}.ency-controls input[type=search],.ency-controls select{width:100%;min-height:46px}.ency-controls .ency-fav-filter{flex:0 1 auto;flex-direction:row;align-items:center;padding:12px 4px}.ency-layout{display:grid;grid-template-columns:minmax(270px,1fr) minmax(330px,1.05fr);gap:18px;align-items:start}.ency-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:720px;overflow:auto;padding:3px}.ency-card{display:flex;align-items:center;gap:10px;text-align:left;min-height:76px;padding:12px;border:1px solid #73513a;border-radius:12px;background:linear-gradient(145deg,#211c1b,#151414);color:#f4e6d4;cursor:pointer;min-width:0}.ency-card:hover,.ency-card:focus-visible,.ency-card.selected{border-color:#d6a35e;box-shadow:0 0 0 1px #b48146}.ency-card span:not(.ency-code){min-width:0;display:flex;flex-direction:column;gap:4px}.ency-card strong{overflow-wrap:anywhere}.ency-card small{color:#c9b9a6;font-size:.75rem}.ency-code,.ency-number{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:#f3c984;background:linear-gradient(150deg,#512521,#281819);border:1px solid #a46d43;border-radius:9px;font-weight:800}.ency-code{width:40px;height:40px;font-size:1.05rem}.ency-detail{position:sticky;top:155px;padding:24px;border:1px solid #8a6243;border-radius:15px;background:linear-gradient(155deg,#29201d,#171516);min-height:320px;color:#f4e6d4;scroll-margin-top:145px}.ency-detail-title{display:flex;align-items:center;gap:15px;margin:16px 0}.ency-number{width:76px;height:76px;font-size:2rem}.ency-detail h2{margin:0;font-size:1.7rem}.ency-detail-title p{margin:6px 0;color:#c9b9a6}.ency-pref{font-weight:700;color:#f4c88b}.ency-history{line-height:1.8}.ency-note{font-size:.83rem;opacity:.7}.ency-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}.ency-actions button{flex:1 1 auto}.ency-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:1050px){.ency-layout{grid-template-columns:1fr}.ency-grid{max-height:none}.ency-detail{position:static}}
+@media(max-width:600px){.ency-grid{grid-template-columns:1fr}.ency-detail{padding:17px}.ency-controls>label{flex-basis:100%}.ency-controls .ency-fav-filter{flex-basis:100%}.ency-number{width:60px;height:60px;font-size:1.6rem}}
+
+/* V0.7.1 — Carte encyclopédique */
+.ency-map-section{margin:22px 0 26px;padding:18px;border:1px solid rgba(205,158,82,.4);border-radius:16px;background:linear-gradient(145deg,rgba(42,29,28,.95),rgba(18,17,23,.98))}
+.ency-map-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}.ency-map-heading h2{margin:0 0 6px;color:#e5c38a}.ency-map-heading p{margin:0;color:#c6bcb3}.ency-map-tools{display:flex;gap:7px;flex-wrap:wrap}.ency-map-tools button{min-width:42px;padding:9px 12px}
+.ency-map-frame{position:relative;max-width:880px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid rgba(215,167,88,.3);background:radial-gradient(ellipse at 48% 45%,#2b2429 0%,#15151b 72%)}
+#encyMap{display:block;width:100%;height:auto;max-height:640px;aspect-ratio:1.35;touch-action:none;cursor:grab;user-select:none}#encyMap:active{cursor:grabbing}
+#encyMapLayer path{fill:#645047;stroke:#d6aa6d;stroke-width:1.15;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .14s ease,opacity .14s ease;outline:none}
+#encyMapLayer path:hover,#encyMapLayer path:focus-visible{fill:#d18a48;stroke:#ffe2a5;stroke-width:2.3}
+#encyMapLayer path.ency-map-muted{opacity:.2}#encyMapLayer path.ency-map-selected{fill:#c23c32;stroke:#ffde9d;stroke-width:2.7;opacity:1}
+.ency-map-tip{position:absolute;left:10px;bottom:10px;padding:8px 12px;border-radius:8px;background:rgba(14,12,18,.87);color:#f0d6a8;pointer-events:none;font-size:.85rem}.ency-map-hint{text-align:center;color:#b6aba2;font-size:.84rem;margin:10px 0 0}
+@media(max-width:600px){.ency-map-section{padding:10px}.ency-map-heading{padding:5px}.ency-map-tip{font-size:.7rem}#encyMap{aspect-ratio:1.05}}
+
+/* V0.7.4 : repère de défilement sur la fiche */
+.ency-layout{scroll-margin-top:90px}
+@media(max-width:1050px){#encyDetail{scroll-margin-top:90px}}
+
+/* V0.7.9 — pictogrammes navigation dark fantasy */
+#siteMenu button {display:flex;align-items:center;gap:.65rem;}
+#siteMenu .nav-rune {width:1.28em;height:1.28em;flex:none;color:#d9b66e;filter:drop-shadow(0 0 3px rgba(194,144,56,.22));}
+#siteMenu button:hover .nav-rune,#siteMenu button:focus-visible .nav-rune {color:#f5d994;}
+
+/* V0.7.10 : icônes de titre coordonnées au menu médiéval */
+#encyclopedia .ency-head h1, #analytics .analytics-head h1, #setup > h1 {display:flex;align-items:center;gap:.48em;}
+.section-rune {display:inline-block;width:.82em;height:.82em;min-width:.82em;flex:0 0 auto;color:#d9b574;vertical-align:middle;}
