@@ -54,7 +54,7 @@ const HISTOIRE_DEPARTEMENTS = Object.freeze({
   "51": "Reims fut pendant des siècles le lieu traditionnel du sacre des rois de France.",
   "52": "Langres fut une cité fortifiée importante entre Champagne et Bourgogne.",
   "53": "Laval se développa autour de son château et de l’industrie textile.",
-  "54": "Nancy fut une capitale des ducs de Lorraine et possède la place Stanislas du XVIIIe siècle.",
+  "54": "Nancy fut une capitale des ducs de Lorraine et possède la place Stanislas du XVIIIe siècle. Thierry va le prendre mal si tu ne connais pas ce département par coeur",
   "55": "Verdun fut le théâtre d’une des batailles les plus meurtrières de la Première Guerre mondiale.",
   "56": "Vannes conserve des remparts témoignant de son rôle dans l’histoire du duché de Bretagne.",
   "57": "Metz fut une place forte stratégique à la frontière de plusieurs ensembles politiques.",
