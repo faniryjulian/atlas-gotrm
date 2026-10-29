@@ -252,6 +252,14 @@ function renderProfile(){
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier le pseudo';
  edit.onclick=()=>{const value=prompt('Ton pseudonyme (32 caractères maximum)',readGuestProfile().nickname);if(value===null)return;const nickname=value.trim().slice(0,32);if(!nickname)return;localStorage.setItem(PROFILE_KEY,JSON.stringify({nickname,createdAt:p.createdAt||new Date().toISOString()}));renderProfile()};
  header.append(edit);panel.append(header);
+ // Fiche RPG : calculs à partir de la progression locale existante, sans nouvelle clé de stockage.
+ const progress=readRpg(),level=rpgLevel(progress.xp),floor=rpgThreshold(level),ceil=rpgThreshold(level+1);
+ const current=Math.max(0,progress.xp-floor),needed=Math.max(1,ceil-floor);
+ const character=document.createElement('div');character.className='character-rank';
+ const rank=document.createElement('strong');rank.textContent=`⚔ ${rankFor(level)} · Niveau ${level}`;
+ const exp=document.createElement('span');exp.textContent=`${progress.xp} XP au total · ${Math.max(0,ceil-progress.xp)} XP avant le niveau ${level+1}`;
+ const track=document.createElement('div');track.className='character-xp-track';track.setAttribute('role','progressbar');track.setAttribute('aria-label','Progression vers le niveau suivant');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(needed));track.setAttribute('aria-valuenow',String(Math.min(current,needed)));
+ const fill=document.createElement('div');fill.className='character-xp-fill';fill.style.width=Math.min(100,Math.round(current/needed*100))+'%';track.append(fill);character.append(rank,exp,track);panel.append(character);
  const info=document.createElement('p');info.textContent=signed?'Ta progression est enregistrée sur cet appareil. Tu peux aussi la synchroniser avec ton compte ci-dessous.':'Ta progression est sauvegardée sur cet appareil. Crée un compte ci-dessous pour la retrouver ailleurs.';panel.append(info);
  const actions=document.createElement('div');actions.className='profile-actions';
  const backup=document.createElement('button');backup.type='button';backup.textContent='↓ Exporter ma progression';backup.onclick=downloadGuestBackup;actions.append(backup);

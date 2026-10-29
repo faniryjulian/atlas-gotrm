@@ -20,3 +20,23 @@ button{border:1px solid #92744f;background:linear-gradient(#302b2b,#17191e);colo
 @media(max-width:850px){main{padding:0 12px}.panel{padding:17px}#profilePanel{padding:245px 17px 20px!important}#profilePanel::before{inset:0 0 auto;width:100%;height:222px;background:linear-gradient(0deg,#17191e 0%,transparent 60%),url('./portrait-cartographe.webp') center 29%/cover no-repeat}#profilePanel .profile-heading{align-items:flex-start}.cloud-panel{padding:18px!important}.progress-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.progress-card{padding:10px;min-height:100px}.progress-card strong{font-size:24px}.progress-card span{font-size:11px}.settings{padding:12px}.campaign-settings{padding:12px}}
 @media(max-width:480px){.progress-cards{grid-template-columns:1fr 1fr}.cloud-buttons button{flex:1 1 100%}header{min-height:66px}#profilePanel{padding-top:205px!important}#profilePanel::before{height:185px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* v1.2.1 — Fiche du personnage et commandes cloud compactes */
+#profilePanel{min-height:300px;padding-bottom:22px!important;margin-bottom:0!important;border-bottom:0!important}
+#profilePanel .character-rank{display:grid;gap:8px;max-width:700px;margin:12px 0 16px}
+.character-rank strong{font:600 clamp(18px,2vw,24px) Cinzel,Georgia,serif;color:#e8c594}
+.character-rank span{font-size:13px;color:#cbbba6}
+.character-xp-track{height:13px;border:1px solid #9e7951;background:#07090b;border-radius:8px;overflow:hidden}
+.character-xp-fill{height:100%;background:linear-gradient(90deg,#973234,#c77b4d,#efc77f);box-shadow:0 0 14px #e6a66a55;transition:width .3s ease}
+#profilePanel>p{margin:10px 0;color:#b9ad9f}
+#rpgPanel{margin-top:0!important;border-top:1px solid #493827!important;border-bottom:0!important;padding:15px 20px 22px!important}
+#rpgPanel>h2,#rpgPanel>p,#rpgPanel>.xp-track{display:none!important}
+#rpgPanel .progress-cards{margin:0;gap:12px}
+#rpgPanel .progress-card{min-height:96px;padding:12px}
+.cloud-panel{border-top:1px solid #72573d!important;padding:17px 22px!important}
+.cloud-panel h3{margin:0 0 9px;font-size:19px!important}
+.cloud-panel #cloudStatus{margin:8px 0 12px;font-size:13px}
+.cloud-panel .cloud-buttons button{min-height:42px;padding:9px 12px;font-size:13px}
+.cloud-panel #cloudSigned{margin:8px 0;font-size:13px}
+@media(max-width:850px){#profilePanel{min-height:unset;padding-bottom:18px!important}#rpgPanel{padding:12px!important}#rpgPanel .progress-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:480px){#rpgPanel .progress-cards{grid-template-columns:1fr 1fr}#rpgPanel .progress-card{min-height:80px}}
