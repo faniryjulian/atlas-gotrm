@@ -151,3 +151,5 @@ header{z-index:100;overflow:visible}
 
 /* Ne pas laisser les styles du panneau annuler l’attribut hidden. */
 #campaignPanel[hidden] { display: none !important; }
+
+.region-count-info{align-self:center;padding:12px 14px;border:1px solid #806344;border-radius:4px;background:#211b1b;color:#e6c79a;font-size:13px;font-weight:600;line-height:1.5}
