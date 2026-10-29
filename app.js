@@ -1,22 +1,5 @@
-const PREF=`01|Bourg-en-Bresse;02|Laon;03|Moulins;04|Digne-les-Bains;05|Gap;06|Nice;07|Privas;08|Charleville-Mézières;09|Foix;10|Troyes;11|Carcassonne;12|Rodez;13|Marseille;14|Caen;15|Aurillac;16|Angoulême;17|La Rochelle;18|Bourges;19|Tulle;2A|Ajaccio;2B|Bastia;21|Dijon;22|Saint-Brieuc;23|Guéret;24|Périgueux;25|Besançon;26|Valence;27|Évreux;28|Chartres;29|Quimper;30|Nîmes;31|Toulouse;32|Auch;33|Bordeaux;34|Montpellier;35|Rennes;36|Châteauroux;37|Tours;38|Grenoble;39|Lons-le-Saunier;40|Mont-de-Marsan;41|Blois;42|Saint-Étienne;43|Le Puy-en-Velay;44|Nantes;45|Orléans;46|Cahors;47|Agen;48|Mende;49|Angers;50|Saint-Lô;51|Châlons-en-Champagne;52|Chaumont;53|Laval;54|Nancy;55|Bar-le-Duc;56|Vannes;57|Metz;58|Nevers;59|Lille;60|Beauvais;61|Alençon;62|Arras;63|Clermont-Ferrand;64|Pau;65|Tarbes;66|Perpignan;67|Strasbourg;68|Colmar;69|Lyon;70|Vesoul;71|Mâcon;72|Le Mans;73|Chambéry;74|Annecy;75|Paris;76|Rouen;77|Melun;78|Versailles;79|Niort;80|Amiens;81|Albi;82|Montauban;83|Toulon;84|Avignon;85|La Roche-sur-Yon;86|Poitiers;87|Limoges;88|Épinal;89|Auxerre;90|Belfort;91|Évry-Courcouronnes;92|Nanterre;93|Bobigny;94|Créteil;95|Cergy`.split(';').map(s=>s.split('|'));
-const prefByCode=Object.fromEntries(PREF);
-// Correspondance officielle des 13 régions métropolitaines et de leurs départements.
-const REGIONS=[
- ['Bretagne','22 29 35 56'],
- ['Normandie','14 27 50 61 76'],
- ['Pays de la Loire','44 49 53 72 85'],
- ['Centre-Val de Loire','18 28 36 37 41 45'],
- ['Hauts-de-France','02 59 60 62 80'],
- ['Île-de-France','75 77 78 91 92 93 94 95'],
- ['Grand Est','08 10 51 52 54 55 57 67 68 88'],
- ['Bourgogne-Franche-Comté','21 25 39 58 70 71 89 90'],
- ['Nouvelle-Aquitaine','16 17 19 23 24 33 40 47 64 79 86 87'],
- ['Auvergne-Rhône-Alpes','01 03 07 15 26 38 42 43 63 69 73 74'],
- ['Occitanie','09 11 12 30 31 32 34 46 48 65 66 81 82'],
- ["Provence-Alpes-Côte d’Azur",'04 05 06 13 83 84'],
- ['Corse','2A 2B']
-].map(([name,codes])=>({name,codes:codes.split(' ')}));
-const regionByCode=Object.fromEntries(REGIONS.flatMap(r=>r.codes.map(c=>[c,r.name])));
+import { PREF, prefByCode, REGIONS, regionByCode } from "./src/data/geography.js";
+import { HISTOIRE_DEPARTEMENTS } from "./src/data/history.js";
 const campaignProgress=()=>{const r=readRpg();return REGIONS.map((region,i)=>{const mastered=region.codes.filter(c=>masteryLabel(r.mastery[c])==='Maîtrisé').length;return {...region,mastered,conquered:mastered===region.codes.length,unlocked:i===0||REGIONS[i-1].codes.every(c=>masteryLabel(r.mastery[c])==='Maîtrisé')}})};
 // V0.8.0 phase 2: one authoritative user-facing mode, legacy selectors are adapters.
 const GAME_MODES=Object.freeze({
