@@ -31,8 +31,11 @@ function syncGameMode(){
  $('conquestMode').value=config.conquest;
  $('mode').value=config.exercise;
  $('exercise').disabled=config.exercise==='free';
+ const exerciseWrap=$('exercise').closest('label');
+ exerciseWrap.hidden=selected==='exploration';
+ $('freeExerciseInfo').hidden=selected!=='exploration';
  $('gameModeDescription').textContent=config.description;
- $('count').disabled=config.exercise==='free'||selected==='regional'||selected==='campaign';
+ $('count').disabled=selected==='regional'||selected==='campaign';
  $('revision').disabled=selected==='regional'||selected==='campaign';
  if($('revision').disabled)$('revision').checked=false;
  renderConquest();
