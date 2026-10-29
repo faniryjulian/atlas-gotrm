@@ -148,3 +148,6 @@ header{z-index:100;overflow:visible}
   fill:#20bfe3; stroke:#d5faff; stroke-width:2.5px;
   filter:drop-shadow(0 0 10px #22d3ee) drop-shadow(0 0 3px #e0fbff);
 }
+
+/* Ne pas laisser les styles du panneau annuler l’attribut hidden. */
+#campaignPanel[hidden] { display: none !important; }

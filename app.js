@@ -75,7 +75,6 @@ function renderConquest(){
   const badge=document.createElement('span');badge.className='region-status';badge.textContent=status;foot.append(badge);
   const arrow=document.createElement('span');arrow.className='region-arrow';arrow.setAttribute('aria-hidden','true');arrow.textContent=selected?'✓':'›';foot.append(arrow);card.append(foot);
   if(!unavailable)card.addEventListener('click',()=>{
-   if($('gameMode').value==='exploration'||$('gameMode').value==='national'){$('gameMode').value='regional';syncGameMode();}
    const choice=$('regionChoice');
    // Rebuild options before selecting when leaving the France-wide mode.
    renderConquest();choice.value=r.name;renderConquest();
