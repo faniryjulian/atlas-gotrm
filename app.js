@@ -31,11 +31,8 @@ function syncGameMode(){
  $('conquestMode').value=config.conquest;
  $('mode').value=config.exercise;
  $('exercise').disabled=config.exercise==='free';
- const exerciseWrap=$('exercise').closest('label');
- exerciseWrap.hidden=selected==='exploration';
- $('freeExerciseInfo').hidden=selected!=='exploration';
  $('gameModeDescription').textContent=config.description;
- $('count').disabled=selected==='regional'||selected==='campaign';
+ $('count').disabled=config.exercise==='free'||selected==='regional'||selected==='campaign';
  $('revision').disabled=selected==='regional'||selected==='campaign';
  if($('revision').disabled)$('revision').checked=false;
  renderConquest();
@@ -324,9 +321,40 @@ function encyFavorites(){try{const v=JSON.parse(localStorage.getItem(ENCY_FAV_KE
 function encySaveFavorites(favs){try{localStorage.setItem(ENCY_FAV_KEY,JSON.stringify([...favs]))}catch{}}
 function encyEntries(){return PREF.map(([code,pref])=>({code,pref,name:departments.find(d=>d.code===code)?.name||'',region:regionByCode[code],history:HISTOIRE_DEPARTEMENTS[code]||''})).filter(d=>d.name)}
 function renderEncyclopedia(){
+ document.querySelector('.ency-controls')?.classList.remove('ency-search-collapsed');
  const select=$('encyRegion');if(select.options.length===1){for(const r of REGIONS){const o=document.createElement('option');o.value=r.name;o.textContent=r.name;select.append(o)}}
  if(!encySelected)encySelected='33';renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap();
 }
+// FB-004.1 : la recherche se replie après une sélection explicite.
+function encyCollapseSearch(){
+ const controls=document.querySelector('.ency-controls');
+ if(!controls)return;
+ controls.classList.add('ency-search-collapsed');
+ const summary=$('encySearchSummary');
+ const d=encyEntries().find(x=>x.code===encySelected);
+ if(summary)summary.textContent=d?`${d.code} — ${d.name} · ${d.pref}`:'Département sélectionné';
+ $('encySearch').value='';
+}
+function encyExpandSearch(){
+ document.querySelector('.ency-controls')?.classList.remove('ency-search-collapsed');
+ const field=$('encySearch');field.focus();field.select();
+}
+function encyShowSelectedDetail(){
+ const target=$('encyDetail');
+ if(!target)return;
+ requestAnimationFrame(()=>{
+  const wide=window.matchMedia('(min-width: 1051px)').matches;
+  const anchor=wide?document.querySelector('.ency-layout'):target;
+  if(!anchor)return;
+  const y=anchor.getBoundingClientRect().top+window.scrollY-90;
+  window.scrollTo({top:Math.max(0,y),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  target.setAttribute('tabindex','-1');target.focus({preventScroll:true});
+ });
+}
+function encySelectAndReveal(code){
+ encySelected=code;encyCollapseSearch();renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap();encyShowSelectedDetail();
+}
+$('encySearchAgain').addEventListener('click',encyExpandSearch);
 function renderEncyclopediaList(){
  const q=norm($('encySearch').value.trim()),region=$('encyRegion').value,favs=encyFavorites();
  const items=encyEntries().filter(d=>(region==='all'||d.region===region)&&(!$('encyFavoritesOnly').checked||favs.has(d.code))&&(!q||[d.code,d.name,d.pref,d.region].some(s=>norm(s).includes(q))));
@@ -336,7 +364,7 @@ function renderEncyclopediaList(){
  const code=document.createElement('strong');code.className='ency-code';code.textContent=d.code;
  const info=document.createElement('span');const name=document.createElement('strong');name.textContent=d.name;const pref=document.createElement('small');pref.textContent='Préfecture : '+d.pref;info.append(name,pref);b.append(code,info);
  if(favs.has(d.code)){const star=document.createElement('span');star.textContent='★';star.setAttribute('aria-label','Favori');b.append(star)}
- b.addEventListener('click',()=>{encySelected=d.code;renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap();if(window.matchMedia('(max-width: 850px)').matches)$('encyDetail').scrollIntoView({behavior:'smooth',block:'start'})});grid.append(b)}
+ b.addEventListener('click',()=>encySelectAndReveal(d.code));grid.append(b)}
 }
 function renderEncyclopediaDetail(){const root=$('encyDetail'),entries=encyEntries(),d=entries.find(x=>x.code===encySelected);root.replaceChildren();if(!d){root.textContent='Sélectionne un département.';return}
  const eyebrow=document.createElement('div');eyebrow.className='eyebrow';eyebrow.textContent='✦ Fiche territoriale ✦';
@@ -348,7 +376,7 @@ function renderEncyclopediaDetail(){const root=$('encyDetail'),entries=encyEntri
  const previous=document.createElement('button');previous.type='button';previous.textContent='← Précédent';const next=document.createElement('button');next.type='button';next.textContent='Suivant →';const index=entries.findIndex(x=>x.code===d.code);previous.disabled=index===0;next.disabled=index===entries.length-1;previous.addEventListener('click',()=>encyGo(entries[index-1].code));next.addEventListener('click',()=>encyGo(entries[index+1].code));actions.append(fav,previous,next);
  root.append(eyebrow,heading,pref,h3,history,note,actions);updateEncyclopediaMap();
 }
-function encyGo(code){encySelected=code;$('encySearch').value='';$('encyRegion').value='all';$('encyFavoritesOnly').checked=false;renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap()}
+function encyGo(code){encySelected=code;encyCollapseSearch();$('encySearch').value='';$('encyRegion').value='all';$('encyFavoritesOnly').checked=false;renderEncyclopediaList();renderEncyclopediaDetail();updateEncyclopediaMap()}
 $('encySearch').addEventListener('input',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
 $('encyRegion').addEventListener('change',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
 $('encyFavoritesOnly').addEventListener('change',()=>{renderEncyclopediaList();updateEncyclopediaMap()});
@@ -360,24 +388,7 @@ function encyMapTransform(){encyMapLayer.setAttribute('transform',`translate(${e
 function encyMapZoom(factor,px=400,py=400){const s=Math.max(1,Math.min(9,encyMapScale*factor));const ratio=s/encyMapScale;encyMapX=px-(px-encyMapX)*ratio;encyMapY=py-(py-encyMapY)*ratio;encyMapScale=s;encyMapTransform()}
 function encyMapPoint(e){const p=encyMapSvg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const matrix=encyMapSvg.getScreenCTM();return matrix?p.matrixTransform(matrix.inverse()):{x:400,y:400}}
 function drawEncyclopediaMap(){encyMapLayer.replaceChildren();for(const d of departments){const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',geometryPath(d.geometry));path.dataset.code=d.code;path.setAttribute('tabindex','0');path.setAttribute('role','button');path.setAttribute('aria-label',`${d.name}, département ${d.code}, préfecture ${d.pref}`);path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();encySelectFromMap(d.code)}});path.addEventListener('pointerenter',()=>{$('encyMapTip').textContent=`${d.code} · ${d.name} — ${d.pref}`});path.addEventListener('pointerleave',()=>{$('encyMapTip').textContent='Clique sur un département pour ouvrir sa fiche.'});encyMapLayer.append(path)}updateEncyclopediaMap()}
-function encySelectFromMap(code){
- // La sélection sur la carte doit aussi rendre la fiche immédiatement visible.
- encySelected=code;
- renderEncyclopediaList();
- renderEncyclopediaDetail();
- updateEncyclopediaMap();
- const target=$('encyDetail');
- if(!target)return;
- requestAnimationFrame(()=>{
-   // Le panneau est sticky sur ordinateur : viser le début de sa section.
-   const isWide=window.matchMedia('(min-width: 1051px)').matches;
-   const element=isWide?document.querySelector('.ency-layout'):target;
-   const y=element.getBoundingClientRect().top+window.scrollY-90;
-   window.scrollTo({top:Math.max(0,y),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-   target.setAttribute('tabindex','-1');
-   try{target.focus({preventScroll:true})}catch(_){}
- });
-}
+function encySelectFromMap(code){encySelectAndReveal(code)}
 function updateEncyclopediaMap(){if(!encyMapLayer)return;const q=norm($('encySearch').value),region=$('encyRegion').value,favs=encyFavorites(),onlyFav=$('encyFavoritesOnly').checked;for(const path of encyMapLayer.querySelectorAll('path')){const d=departments.find(x=>x.code===path.dataset.code);if(!d)continue;const matched=(region==='all'||regionByCode[d.code]===region)&&(!onlyFav||favs.has(d.code))&&(!q||[d.code,d.name,d.pref,regionByCode[d.code]].some(v=>norm(v).includes(q)));path.classList.toggle('ency-map-muted',!matched);path.classList.toggle('ency-map-selected',d.code===encySelected);path.setAttribute('aria-pressed',String(d.code===encySelected))}}
 $('encyZoomIn').addEventListener('click',()=>encyMapZoom(1.4));$('encyZoomOut').addEventListener('click',()=>encyMapZoom(1/1.4));$('encyZoomReset').addEventListener('click',()=>{encyMapScale=1;encyMapX=encyMapY=0;encyMapTransform()});
 encyMapSvg.addEventListener('wheel',e=>{e.preventDefault();const p=encyMapPoint(e);encyMapZoom(e.deltaY<0?1.2:1/1.2,p.x,p.y)},{passive:false});

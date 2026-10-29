@@ -154,7 +154,9 @@ header{z-index:100;overflow:visible}
 
 .region-count-info{align-self:center;padding:12px 14px;border:1px solid #806344;border-radius:4px;background:#211b1b;color:#e6c79a;font-size:13px;font-weight:600;line-height:1.5}
 
-/* V0.8.0 : progression prioritaire sur l'accueil */
-#setup .progress-overview{display:grid;gap:16px;margin-bottom:32px;}
-#setup .progress-overview .dashboard{margin-top:0;}
-#setup .progress-overview .mastery-panel{margin-top:0;}
+/* FB-004.1 — Repli de la recherche après sélection et accès direct à la fiche. */
+.ency-search-summary{display:none;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 14px;border:1px solid #8a6243;border-radius:10px;background:#211b1b;color:#f4e6d4}
+.ency-search-summary button{flex-shrink:0}
+.ency-controls.ency-search-collapsed>label{display:none}
+.ency-controls.ency-search-collapsed .ency-search-summary{display:flex}
+@media(max-width:600px){.ency-search-summary{flex-wrap:wrap}.ency-search-summary button{width:100%}}
