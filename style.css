@@ -139,3 +139,6 @@ header{z-index:100;overflow:visible}
   #encyDetail { order: 1; width: 100%; }
   #encyGrid { order: 2; width: 100%; }
 }
+
+/* V0.8.0: persistent active game mode */
+.active-mode-badge{display:inline-block!important;width:max-content;max-width:100%;padding:5px 10px;border:1px solid #a07b51;border-radius:4px;background:#2d2320;color:#f0cf9c!important;font-size:12px!important;font-weight:700;margin-top:7px}
