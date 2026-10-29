@@ -16,8 +16,8 @@ async function fetchRemote(){const {data,error}=await client.from('player_progre
 async function upload(){
 const payload=snap();
 if(revision===null){
- const {error}=await client.from('player_progress').insert({user_id:user.id,payload});
- if(error)throw error;
+ const {data,error}=await client.from('player_progress').insert({user_id:user.id,payload}).select('updated_at').single();
+ if(error)throw error;revision=data.updated_at;
 }else{
  const {data,error}=await client.from('player_progress').update({payload,updated_at:new Date().toISOString()}).eq('user_id',user.id).eq('updated_at',revision).select('updated_at').maybeSingle();
  if(error)throw error;
@@ -34,7 +34,7 @@ function mount(){const p=$('profilePanel');if(!p)return;const wrap=document.crea
 p.insertAdjacentElement('afterend',wrap);render();
 if(!configured){status('Mode invité actif. Configure Supabase pour activer les comptes.');wrap.querySelectorAll('input,button').forEach(x=>x.disabled=true);return;}
 status('Connexion au service de comptes…');
-(async()=>{try{const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');client=createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{user:u},error}=await client.auth.getUser();if(error)throw error;user=u;render();if(user)await reconcile();else status('Mode invité : crée un compte ou connecte-toi.');client.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;render();if(user){setTimeout(()=>run(reconcile),0)}else status('Mode invité actif.');});}catch(e){status('Impossible de charger la connexion : '+e.message)}})();
+(async()=>{try{const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');client=createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session},error:sessionError}=await client.auth.getSession();if(sessionError)throw sessionError;user=session?.user||null;render();if(user)await reconcile();else status('Mode invité actif : crée un compte ou connecte-toi pour synchroniser ta progression.');client.auth.onAuthStateChange((_event,session)=>{user=session?.user||null;render();if(user){setTimeout(()=>run(reconcile),0)}else status('Mode invité actif.');});}catch(e){status('Impossible de charger la connexion : '+e.message)}})();
 $('cloudAccount').onsubmit=e=>{e.preventDefault();run(async()=>{const {error}=await client.auth.signInWithPassword({email:$('cloudMail').value.trim(),password:$('cloudPassword').value});if(error)throw error;$('cloudPassword').value='';status('Connecté. Vérifie les sauvegardes avant toute synchronisation.');});};
 $('cloudSignup').onclick=()=>run(async()=>{const email=$('cloudMail').value.trim(),password=$('cloudPassword').value;if(!email||password.length<8){status('Renseigne un email et un mot de passe de 8 caractères minimum.');return}const {data,error}=await client.auth.signUp({email,password});if(error)throw error;$('cloudPassword').value='';status(data.session?'Compte créé. Choisis comment transférer ta progression.':'Vérifie ton email pour confirmer ton compte, puis connecte-toi.');});
 $('cloudUpload').onclick=()=>run(async()=>{await fetchRemote();if(remote&&!confirm('Une sauvegarde cloud existe. Remplacer sa progression par celle de cet appareil ? Cette action est irréversible.'))return;if(!remote&&!confirm('Envoyer la progression de cet appareil dans ton nouveau compte ?'))return;await upload();});
