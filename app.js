@@ -104,6 +104,8 @@ $('zoomIn').onclick=()=>zoom(1.35);$('zoomOut').onclick=()=>zoom(1/1.35);$('rese
 // V0.6.5 — déplacement à un doigt et zoom par pincement à deux doigts.
 const svg=$('map');
 const activePointers=new Map();
+const tapOrigins=new Map();
+let gestureWasMultiTouch=false;
 let pinch=null;
 const svgPoint=(x,y)=>{
   const p=svg.createSVGPoint();p.x=x;p.y=y;
@@ -125,6 +127,8 @@ svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.18:1/1.18)
 svg.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  tapOrigins.set(e.pointerId,{x:e.clientX,y:e.clientY,moved:false});
+  if(activePointers.size>1)gestureWasMultiTouch=true;
   try{svg.setPointerCapture(e.pointerId)}catch{}
   if(activePointers.size===2){beginPinch()}
   else if(activePointers.size===1){drag={x:e.clientX,y:e.clientY,tx,ty};svg.classList.add('dragging')}
@@ -132,6 +136,8 @@ svg.addEventListener('pointerdown',e=>{
 svg.addEventListener('pointermove',e=>{
   if(!activePointers.has(e.pointerId))return;
   activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const origin=tapOrigins.get(e.pointerId);
+  if(origin&&Math.hypot(e.clientX-origin.x,e.clientY-origin.y)>8)origin.moved=true;
   if(activePointers.size>=2){
     if(activePointers.size!==2)return;
     if(!pinch)beginPinch();
@@ -156,6 +162,24 @@ function endPointer(e){
     drag={x:p.x,y:p.y,tx,ty};svg.classList.add('dragging');
   }else{drag=null;svg.classList.remove('dragging')}
 }
+// La capture du pointeur redirige parfois le clic vers le SVG plutôt que vers le path.
+// Identifier le département sous un véritable appui bref, sans sélectionner après un glissement.
+svg.addEventListener('pointerup',e=>{
+  const origin=tapOrigins.get(e.pointerId);
+  if(origin&&!origin.moved&&!gestureWasMultiTouch&&activePointers.size===1){
+    const point=svgPoint(e.clientX,e.clientY);
+    const hit=[...svg.querySelectorAll('path[data-code]')].find(path=>{
+      if(typeof path.isPointInFill!=='function')return false;
+      const local=svg.createSVGPoint();local.x=e.clientX;local.y=e.clientY;
+      const matrix=path.getScreenCTM();
+      return matrix&&path.isPointInFill(local.matrixTransform(matrix.inverse()));
+    });
+    if(hit)choose(hit.dataset.code);
+  }
+  tapOrigins.delete(e.pointerId);
+  if(activePointers.size===1)gestureWasMultiTouch=false;
+});
+svg.addEventListener('pointercancel',e=>{tapOrigins.delete(e.pointerId);gestureWasMultiTouch=false});
 svg.addEventListener('pointerup',endPointer);
 svg.addEventListener('pointercancel',endPointer);
 svg.addEventListener('lostpointercapture',endPointer);
