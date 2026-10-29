@@ -51,7 +51,7 @@ function renderConquest(){
  if([...sel.options].some(o=>o.value===previous))sel.value=previous;
  $('campaignHint').textContent=mode==='campaign'?'Campagne : conquiers tous les départements d’une région pour débloquer la suivante.':mode==='all'?'France entière : les 96 départements restent disponibles.':'Conquête libre : clique sur une carte pour choisir ta région.';
  const panel=$('campaignPanel');
- panel.hidden=$('gameMode').value!=='regional';
+ panel.hidden=!['regional','campaign'].includes($('gameMode').value);
  panel.replaceChildren();
  const heading=document.createElement('div');heading.className='conquest-heading';
  const headingText=document.createElement('div');
