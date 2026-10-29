@@ -166,3 +166,7 @@ header{z-index:100;overflow:visible}
 
 /* Cloud account panel */
 .cloud-panel{margin:1rem 0;padding:1.1rem;border:1px solid #8e714c;background:#161518;color:#ead5b4;border-radius:6px}.cloud-panel h3{margin:.1rem 0 .7rem}.cloud-panel form{display:grid;gap:.7rem;max-width:560px}.cloud-panel label{display:grid;gap:.3rem}.cloud-panel input{width:100%;box-sizing:border-box;padding:.65rem;background:#111;border:1px solid #8e714c;color:#fff}.cloud-buttons{display:flex;gap:.6rem;flex-wrap:wrap;margin:.7rem 0}.cloud-buttons button{padding:.65rem .85rem;cursor:pointer}.cloud-panel [hidden]{display:none!important}
+
+/* v1.1: one coherent profile surface, while keeping auth controls and local backup */
+#profilePanel.profile-unified{border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;border-bottom:0}
+#cloudPanel.profile-unified-cloud{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}
