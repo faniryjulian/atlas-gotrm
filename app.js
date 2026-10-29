@@ -184,7 +184,20 @@ svg.addEventListener('pointerup',endPointer);
 svg.addEventListener('pointercancel',endPointer);
 svg.addEventListener('lostpointercapture',endPointer);
 
-function choose(code){if(activeRegion&&regionByCode[code]!==activeRegion)return;if(locked||freeMode&&freeDone.has(code))return;selected=code;$('selected').textContent='Département sélectionné sur la carte';paint()}
+function choose(code){
+  if(activeRegion&&regionByCode[code]!==activeRegion)return;
+  if(freeMode&&freeDone.has(code))return;
+  if(locked){
+    // En exploration libre, un clic sur un autre département passe directement à l'exercice suivant.
+    // Le résultat précédent a déjà été sauvegardé dans answers par submitFree().
+    if(!freeMode)return;
+    if(freeDone.size>=sessionLimit){finish();return;}
+    renderFree();
+  }
+  selected=code;
+  $('selected').textContent='Département sélectionné sur la carte';
+  paint();
+}
 function paint(){document.querySelectorAll('#map path').forEach(p=>{p.classList.remove('active','correct','incorrect','highlight');if(p.dataset.code===selected)p.classList.add('active');if($('game').hidden)return;if(!freeMode&&variant==='map'&&session[index]?.code===p.dataset.code)p.classList.add('highlight');if(freeMode&&freeDone.has(p.dataset.code))p.classList.add('correct');if(searchCode===p.dataset.code)p.classList.add('highlight');if(filterRegion!=='all'&&regionByCode[p.dataset.code]!==filterRegion)p.classList.add('dimmed');if($('correction').value==='immediate')for(const a of answers){if(a.target.code===p.dataset.code)p.classList.add(a.right?'correct':'incorrect')}})}
 function setVisible(section){for(const id of ['setup','game','results','analytics','encyclopedia'])$(id).hidden=id!==section;$('startDock').hidden=section!=='setup';closeSiteMenu()}
 function start(){syncGameMode();activeGameMode=$('gameMode').value;if(!departments.length){$('setupMsg').textContent='Attends le chargement de la carte ou vérifie ta connexion.';return}let pool=departments;activeConquestMode=$('conquestMode').value;activeRegion=activeConquestMode==='all'?null:$('regionChoice').value;if(activeRegion)pool=pool.filter(d=>regionByCode[d.code]===activeRegion);if($('revision').checked){const codes=JSON.parse(localStorage.getItem('dm_errors')||'[]');pool=pool.filter(d=>codes.includes(d.code));if(!pool.length){$('setupMsg').textContent='Aucune erreur enregistrée pour ce territoire.';return}}freeMode=$('mode').value==='free';session=freeMode?pool:shuffle(pool).slice(0,Number($('count').value));sessionLimit=Math.min(Number($('count').value),session.length);answers=[];index=0;selected=null;locked=false;sessionSaved=false;freeDone=new Set();searchCode=null;$('mapSearch').value='';$('mapTools').hidden=!freeMode;$('freeProgress').hidden=!freeMode;setVisible('game');renderActiveMode();filterRegion=activeRegion||'all';$('regionFilter').value=activeRegion||'all';$('regionFilter').disabled=true;$('workspace').classList.toggle('immersive',$('layout').value==='immersive');if(freeMode)renderFree();else renderQuestion()}
