@@ -153,3 +153,8 @@ header{z-index:100;overflow:visible}
 #campaignPanel[hidden] { display: none !important; }
 
 .region-count-info{align-self:center;padding:12px 14px;border:1px solid #806344;border-radius:4px;background:#211b1b;color:#e6c79a;font-size:13px;font-weight:600;line-height:1.5}
+
+/* V0.8.0 : progression prioritaire sur l'accueil */
+#setup .progress-overview{display:grid;gap:16px;margin-bottom:32px;}
+#setup .progress-overview .dashboard{margin-top:0;}
+#setup .progress-overview .mastery-panel{margin-top:0;}
