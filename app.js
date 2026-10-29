@@ -97,7 +97,7 @@ async function loadMap(){try{const r=await fetch(geoURL);if(!r.ok)throw Error('H
 function project(c){return [(c[0]+5.8)/16*800,(51.5-c[1])/11.2*800]}
 function geometryPath(g){const polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;return polys.map(poly=>poly.map(ring=>ring.map((p,i)=>(i?'L':'M')+project(p).map(x=>x.toFixed(2)).join(',')).join(' ')+' Z').join(' ')).join(' ')}
 function populateRegions(){const sel=$('regionFilter');const names=[...new Set(departments.map(d=>regionByCode[d.code]||'').filter(Boolean))].sort();for(const n of names){const o=document.createElement('option');o.value=n;o.textContent=n;sel.append(o)}if(!names.length){sel.hidden=true}}
-function drawMap(){const g=$('mapLayer');g.innerHTML='';for(const d of departments){const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',geometryPath(d.geometry));p.dataset.code=d.code;p.setAttribute('tabindex','0');p.setAttribute('role','button');p.setAttribute('aria-label','Département sélectionnable');p.addEventListener('click',()=>choose(d.code));p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(d.code)}});p.addEventListener('dblclick',e=>{e.preventDefault();zoom(1.7)});g.appendChild(p)}applyTransform()}
+function drawMap(){const g=$('mapLayer');g.innerHTML='';for(const d of departments){const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',geometryPath(d.geometry));p.dataset.code=d.code;p.setAttribute('tabindex','0');p.setAttribute('role','button');p.setAttribute('aria-label','Département sélectionnable');p.addEventListener('click',e=>{if(e.detail===0)choose(d.code)});p.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(d.code)}});p.addEventListener('dblclick',e=>{e.preventDefault();zoom(1.7)});g.appendChild(p)}applyTransform()}
 function applyTransform(){$('mapLayer').setAttribute('transform',`translate(${tx} ${ty}) scale(${scale})`)}
 function zoom(f){scale=Math.max(1,Math.min(9,scale*f));applyTransform()}
 $('zoomIn').onclick=()=>zoom(1.35);$('zoomOut').onclick=()=>zoom(1/1.35);$('resetZoom').onclick=()=>{scale=1;tx=ty=0;applyTransform()};
@@ -167,14 +167,16 @@ function endPointer(e){
 svg.addEventListener('pointerup',e=>{
   const origin=tapOrigins.get(e.pointerId);
   if(origin&&!origin.moved&&!gestureWasMultiTouch&&activePointers.size===1){
-    const point=svgPoint(e.clientX,e.clientY);
     const hit=[...svg.querySelectorAll('path[data-code]')].find(path=>{
       if(typeof path.isPointInFill!=='function')return false;
       const local=svg.createSVGPoint();local.x=e.clientX;local.y=e.clientY;
       const matrix=path.getScreenCTM();
       return matrix&&path.isPointInFill(local.matrixTransform(matrix.inverse()));
     });
-    if(hit)choose(hit.dataset.code);
+    if(hit){
+      // Une seule source de sélection pour les interactions au pointeur.
+      choose(hit.dataset.code);
+    }
   }
   tapOrigins.delete(e.pointerId);
   if(activePointers.size===1)gestureWasMultiTouch=false;
@@ -192,10 +194,12 @@ function choose(code){
     // Le résultat précédent a déjà été sauvegardé dans answers par submitFree().
     if(!freeMode)return;
     if(freeDone.size>=sessionLimit){finish();return;}
+    selected=null;
     renderFree();
   }
   selected=code;
   $('selected').textContent='Département sélectionné sur la carte';
+  if(freeMode){$('clue').textContent='Département sélectionné : complète les trois informations.';}
   paint();
 }
 function paint(){document.querySelectorAll('#map path').forEach(p=>{p.classList.remove('active','correct','incorrect','highlight');if(p.dataset.code===selected)p.classList.add('active');if($('game').hidden)return;if(!freeMode&&variant==='map'&&session[index]?.code===p.dataset.code)p.classList.add('highlight');if(freeMode&&freeDone.has(p.dataset.code))p.classList.add('correct');if(searchCode===p.dataset.code)p.classList.add('highlight');if(filterRegion!=='all'&&regionByCode[p.dataset.code]!==filterRegion)p.classList.add('dimmed');if($('correction').value==='immediate')for(const a of answers){if(a.target.code===p.dataset.code)p.classList.add(a.right?'correct':'incorrect')}})}
